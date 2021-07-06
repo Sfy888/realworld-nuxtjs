@@ -14,80 +14,89 @@
         <div class="col-md-9">
           <div class="feed-toggle">
             <ul class="nav nav-pills outline-active">
-              <li class="nav-item">
-                <a class="nav-link disabled"
-                   href="">Your Feed</a>
+              <li class="nav-item"
+                  v-if="user">
+                <nuxt-link class="nav-link"
+                           :class="{active:tab === 'your_feed'}"
+                           exact
+                           :to="{name:'home',query:{tab:'your_feed'}}">Your Feed</nuxt-link>
               </li>
               <li class="nav-item">
-                <a class="nav-link active"
-                   href="">Global Feed</a>
+                <nuxt-link class="nav-link"
+                           :class="{active:tab === 'global_feed'}"
+                           exact
+                           :to="{name:'home',query:{tab:'global_feed'}}">Global Feed</nuxt-link>
+              </li>
+              <li v-if="tag"
+                  class="nav-item">
+                <nuxt-link class="nav-link"
+                           :class="{active:tab === 'tag'}"
+                           :to="{name:'home',query:{tab:'tag',tag:tag}}">#{{ tag }}</nuxt-link>
               </li>
             </ul>
           </div>
 
-          <div class="article-preview">
+          <div class="article-preview"
+               v-for="article in articles"
+               :key="article.slug">
             <div class="article-meta">
-              <a href="profile.html"><img src="http://i.imgur.com/Qr71crq.jpg" /></a>
+              <nuxt-link :to="{name: 'profile',params:{username:article.author.username}}"><img :src="article.author.image" /></nuxt-link>
               <div class="info">
-                <a href=""
-                   class="author">Eric Simons</a>
-                <span class="date">January 20th</span>
+                <nuxt-link class="author"
+                           :to="{name: 'profile',params:{username:article.author.username}}">{{ article.author.username }}</nuxt-link>
+                <!-- <a href="">Eric Simons</a> -->
+                <span class="date">{{ article.createdAt }}</span>
               </div>
-              <button class="btn btn-outline-primary btn-sm pull-xs-right">
-                <i class="ion-heart"></i> 29
+              <button class="btn btn-outline-primary btn-sm pull-xs-right"
+                      :class="{active:article.favorited}">
+                <i class="ion-heart"></i> {{ article.favoritesCount }}
               </button>
             </div>
-            <a href=""
-               class="preview-link">
-              <h1>How to build webapps that scale</h1>
-              <p>This is the description for the post.</p>
+            <nuxt-link :to="{
+              name:'article',
+              params: {
+                slug:article.slug
+              }
+            }"
+                       class="preview-link">
+              <h1>{{ article.title }}</h1>
+              <p>{{ article.description }}</p>
               <span>Read more...</span>
-            </a>
+            </nuxt-link>
           </div>
-
-          <div class="article-preview">
-            <div class="article-meta">
-              <a href="profile.html"><img src="http://i.imgur.com/N4VcUeJ.jpg" /></a>
-              <div class="info">
-                <a href=""
-                   class="author">Albert Pai</a>
-                <span class="date">January 20th</span>
-              </div>
-              <button class="btn btn-outline-primary btn-sm pull-xs-right">
-                <i class="ion-heart"></i> 32
-              </button>
-            </div>
-            <a href=""
-               class="preview-link">
-              <h1>The song you won't ever stop singing. No matter how hard you try.</h1>
-              <p>This is the description for the post.</p>
-              <span>Read more...</span>
-            </a>
-          </div>
-
         </div>
+
+        <!-- 分页列表 -->
+        <nav>
+          <ul class="pagination">
+            <li class="page-item"
+                :class="{
+                  active: item === page
+                }"
+                v-for="item in totalpage"
+                :key="item">
+              <nuxt-link class="page-link"
+                         :to="{
+                    name: 'home',
+                    query: {
+                      page: item,
+                      tag:$route.query.tag
+                    }
+                  }">{{ item }}</nuxt-link>
+            </li>
+          </ul>
+        </nav>
+        <!-- /分页列表 -->
 
         <div class="col-md-3">
           <div class="sidebar">
             <p>Popular Tags</p>
 
             <div class="tag-list">
-              <a href=""
-                 class="tag-pill tag-default">programming</a>
-              <a href=""
-                 class="tag-pill tag-default">javascript</a>
-              <a href=""
-                 class="tag-pill tag-default">emberjs</a>
-              <a href=""
-                 class="tag-pill tag-default">angularjs</a>
-              <a href=""
-                 class="tag-pill tag-default">react</a>
-              <a href=""
-                 class="tag-pill tag-default">mean</a>
-              <a href=""
-                 class="tag-pill tag-default">node</a>
-              <a href=""
-                 class="tag-pill tag-default">rails</a>
+              <nuxt-link :to="{name:'home',query:{ tag:item,tab:'tag' }}"
+                         v-for="item in tags"
+                         :key="item"
+                         class="tag-pill tag-default">{{ item }}</nuxt-link>
             </div>
           </div>
         </div>
@@ -100,8 +109,42 @@
 </template>
 
 <script>
+import { getArticles } from '@/api/article'
+import { getTags } from '@/api/tag'
+import { mapState } from 'vuex'
+
 export default {
   name: 'HomeIndex',
+  // 首屏渲染和有利于seo的就用到asyncData
+  async asyncData ({ query }) {
+    // query就是context中的查询字符串的对象
+    const page = Number.parseInt(query.page || 1)
+    const limit = 20
+    const { tag } = query
+    // const { data } = await
+    // // console.log(data);
+
+    // const { data: tagData } = await
+    const [articleRes, tagRes] = await Promise.all([getArticles({
+      limit: limit,
+      offset: (page - 1) * limit,
+      tag: tag
+    }), getTags()])
+
+    const { articles, articlesCount } = articleRes.data
+    const { tags } = tagRes.data
+
+    return {
+      articles,
+      articlesCount,
+      tags,
+      limit,
+      page,
+      tag,
+      tab: query.tab || 'global_feed'
+
+    }
+  },
   components: {},
   props: [],
   data () {
@@ -109,7 +152,14 @@ export default {
 
     };
   },
-  computed: {},
+  // 使用该watchQuery键为查询字符串设置观察者。如果定义的字符串发生变化，所有组件方法（asyncData、fetch(context)、validate、layout 等）都将被调用。默认情况下禁用监视以提高性能
+  watchQuery: ['page', 'tag', 'tab'],
+  computed: {
+    ...mapState(['user']),
+    totalpage () {
+      return Math.ceil(this.articlesCount / this.limit)
+    }
+  },
   watch: {},
   created () {
 

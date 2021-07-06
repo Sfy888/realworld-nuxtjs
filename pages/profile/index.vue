@@ -95,6 +95,7 @@
 
 <script>
 export default {
+  middleware: 'authenticated',
   name: 'UserProfile',
   components: {},
   props: [],

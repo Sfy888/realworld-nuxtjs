@@ -59,7 +59,12 @@
 
 <script>
 import { login, register } from '@/api/user'
+
+//  仅在客服端加载 js-cookie 包。 process.client 是nuxt提供的数据，如果是true，就是代表着运行在客户端，false就是运行在服务端
+const Cookie = process.client ? require('js-cookie') : undefined
+
 export default {
+  middleware: 'notAuthenticated',
   name: 'LoginIndex',
   components: {},
   props: [],
@@ -92,8 +97,13 @@ export default {
         const { data } = this.isLogin ? await login({
           user: this.user
         }) : await register({ user: this.user })
-        console.log(data);
+        // console.log(data);
         // TODO 保存用户登录状态
+        this.$store.commit('setUser', data.user)
+        // 状态持久化
+        // js-cookie是一个操作浏览器状态的包，不是操作服务器端的,运行在客服端
+        // 为了防止刷新页面数据丢失，需要数据持久化
+        Cookie.set('user', data.user)
 
         // 跳转到首页
         this.$router.push('/')
