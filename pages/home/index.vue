@@ -45,10 +45,12 @@
                 <nuxt-link class="author"
                            :to="{name: 'profile',params:{username:article.author.username}}">{{ article.author.username }}</nuxt-link>
                 <!-- <a href="">Eric Simons</a> -->
-                <span class="date">{{ article.createdAt }}</span>
+                <span class="date">{{ article.createdAt | date('MMM DD, YYYY') }}</span>
               </div>
               <button class="btn btn-outline-primary btn-sm pull-xs-right"
-                      :class="{active:article.favorited}">
+                      :class="{active:article.favorited}"
+                      @click="onFavorite(article)"
+                      :disabled="article.favoriteDisabled">
                 <i class="ion-heart"></i> {{ article.favoritesCount }}
               </button>
             </div>
@@ -110,7 +112,7 @@
 </template>
 
 <script>
-import { getArticles, getFeedArticles } from '@/api/article'
+import { getArticles, getFeedArticles, addFavorite, deleteFavorite } from '@/api/article'
 import { getTags } from '@/api/tag'
 import { mapState } from 'vuex'
 
@@ -127,7 +129,6 @@ export default {
     const tab = query.tab || 'global_feed'
 
     const loadArticles = store.state.user && tab === 'your_feed' ? getFeedArticles : getArticles
-    console.log(loadArticles, '444444');
     // const { data: tagData } = await
     const [articleRes, tagRes] = await Promise.all([
       loadArticles({
@@ -139,6 +140,9 @@ export default {
 
     const { articles, articlesCount } = articleRes.data
     const { tags } = tagRes.data
+
+    // 手动添加禁用喜欢按钮状态
+    articles.forEach(el => el.favoriteDisabled = false)
 
     return {
       articles,
@@ -174,7 +178,23 @@ export default {
 
   },
   methods: {
-
+    async onFavorite (article) {
+      // 开启按钮禁用状态
+      article.favoriteDisabled = true
+      if (article.favorited) {
+        // 取消点赞
+        await deleteFavorite(article.slug)
+        article.favorited = false
+        article.favoritesCount += -1
+      } else {
+        // 添加点赞
+        await addFavorite(article.slug)
+        article.favorited = true
+        article.favoritesCount += 1
+      }
+      // 关闭按钮禁用状态
+      article.favoriteDisabled = false
+    }
   }
 };
 </script>
