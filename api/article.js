@@ -1,6 +1,6 @@
-import request from '@/utils/request'
+import { request } from '@/plugins/request'
 
-// 用户登录
+// 获取公共文章列表
 export const getArticles = params => {
   return request({
     method: 'GET',
@@ -10,11 +10,11 @@ export const getArticles = params => {
 }
 
 
-// 用户注册
-export const register = data => {
+// 获取用户关注的文章列表
+export const getFeedArticles = params => {
   return request({
-    method: 'POST',
-    url: '/api/users',
-    data
+    method: 'GET',
+    url: '/api/articles/feed',
+    params
   })
 }

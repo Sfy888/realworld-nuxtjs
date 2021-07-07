@@ -80,7 +80,8 @@
                     name: 'home',
                     query: {
                       page: item,
-                      tag:$route.query.tag
+                      tag:$route.query.tag,
+                      tab:tab
                     }
                   }">{{ item }}</nuxt-link>
             </li>
@@ -109,27 +110,32 @@
 </template>
 
 <script>
-import { getArticles } from '@/api/article'
+import { getArticles, getFeedArticles } from '@/api/article'
 import { getTags } from '@/api/tag'
 import { mapState } from 'vuex'
 
 export default {
   name: 'HomeIndex',
   // 首屏渲染和有利于seo的就用到asyncData
-  async asyncData ({ query }) {
+  async asyncData ({ query, store }) {
     // query就是context中的查询字符串的对象
     const page = Number.parseInt(query.page || 1)
     const limit = 20
     const { tag } = query
     // const { data } = await
     // // console.log(data);
+    const tab = query.tab || 'global_feed'
 
+    const loadArticles = store.state.user && tab === 'your_feed' ? getFeedArticles : getArticles
+    console.log(loadArticles, '444444');
     // const { data: tagData } = await
-    const [articleRes, tagRes] = await Promise.all([getArticles({
-      limit: limit,
-      offset: (page - 1) * limit,
-      tag: tag
-    }), getTags()])
+    const [articleRes, tagRes] = await Promise.all([
+      loadArticles({
+        limit: limit,
+        offset: (page - 1) * limit,
+        tag: tag
+      }), getTags()
+    ])
 
     const { articles, articlesCount } = articleRes.data
     const { tags } = tagRes.data
@@ -141,7 +147,7 @@ export default {
       limit,
       page,
       tag,
-      tab: query.tab || 'global_feed'
+      tab
 
     }
   },

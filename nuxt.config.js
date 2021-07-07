@@ -58,5 +58,9 @@ module.exports = {
         // }
       ])
     }
-  }
+  },
+  // 注册插件
+  plugins: [
+    '~/plugins/request.js'
+  ]
 }

@@ -1,6 +1,6 @@
-import request from '@/utils/request'
+import { request } from '@/plugins/request'
 
-// 用户登录
+// 获取文章标签列表
 export const getTags = () => {
   return request({
     method: 'GET',
