@@ -1,12 +1,12 @@
 import { request } from '@/plugins/request'
 
-// 获取文章标签列表
-// export const getTags = () => {
-//   return request({
-//     method: 'GET',
-//     url: '/api/tags'
-//   })
-// }
+// 获取个人资料
+export const getUserInfo = (username) => {
+  return request({
+    method: 'GET',
+    url: `/api/profiles/${username}`
+  })
+}
 
 // 关注用户  
 export const followUser = username => {

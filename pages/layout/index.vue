@@ -28,7 +28,12 @@
             </li>
             <li class="nav-item">
               <nuxt-link class="nav-link"
-                         to="/profile/4">
+                         :to="{
+                           name:'profile',params:{
+                             username:user.username
+                           }
+                           
+                         }">
                 <img class="user-pic"
                      :src="user.image"
                      alt="">{{ user.username }}
@@ -82,11 +87,10 @@ export default {
     };
   },
   computed: {
-    ...mapState(['user'])
+    ...mapState(['user']),
   },
   watch: {},
   created () {
-
   },
   mounted () {
 
